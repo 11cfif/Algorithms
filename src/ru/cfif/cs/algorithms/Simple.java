@@ -1,26 +1,84 @@
 package ru.cfif.cs.algorithms;
 
 import java.io.*;
+import java.util.*;
 
 public class Simple {
 
 	public static void main(String[] args) throws IOException {
-
 		Reader in = new Reader(System.in);
 		Writer out = new Writer(System.out);
 		int n = in.nextInt();
-		int m = 15000;
-		boolean[] b = new boolean[m];
+		int m = in.nextInt();
+		SegmentPoint[] segmentPoints = new SegmentPoint[2 * n + m];
+		int[] result = new int[m];
 		int a;
+		int b;
 		for (int i = 0; i < n; i++) {
 			a = in.nextInt();
-			if (!b[a - 1]) {
-				b[a - 1] = true;
-				m--;
+			b = in.nextInt();
+			segmentPoints[2 * i] = new SegmentPoint(i + 1, (a <= b) ? a : b, SegmentPointType.LEFT);
+			segmentPoints[2 * i + 1] = new SegmentPoint(i + 1,  (a > b) ? a : b, SegmentPointType.RIGHT);
+		}
+		for (int i = 2 * n; i < 2 * n + m; i++)
+			segmentPoints[i] = new SegmentPoint(i - 2 * n,  in.nextInt(), SegmentPointType.CENTER);
+
+		Arrays.sort(segmentPoints);
+		int k = 0;
+		for (SegmentPoint point : segmentPoints) {
+			switch (point.type) {
+			case CENTER:
+				result[point.segmentNumber] = k;
+				break;
+			case LEFT:
+				k++;
+				break;
+			default:
+				k--;
+				break;
 			}
 		}
-		out.print(m);
+		for (long i : result)
+			out.print(i + " ");
+
 		out.close();
+	}
+
+	public static class SegmentPoint implements Comparable<SegmentPoint> {
+
+		private final int point;
+		private final int segmentNumber;
+		private final SegmentPointType type;
+
+		public SegmentPoint(int segmentNumber, int point, SegmentPointType type) {
+			this.point = point;
+			this.segmentNumber = segmentNumber;
+			this.type = type;
+		}
+
+		@Override
+		public int compareTo(SegmentPoint o) {
+			int res = Integer.compare(point, o.point);
+			if (res == 0)
+				return Integer.compare(type.id, o.type.id);
+			return res;
+		}
+
+		@Override
+		public String toString() {
+			return "p = " + point + " t=" + type;
+		}
+	}
+
+	public enum SegmentPointType {
+		LEFT(0),
+		CENTER(1),
+		RIGHT(2);
+		private final int id;
+
+		SegmentPointType(int id) {
+			this.id = id;
+		}
 	}
 
 	static class Writer {
@@ -35,21 +93,15 @@ public class Simple {
 			this.n = 0;
 		}
 
-		byte c[] = new byte[20];
-		void print( int x ) throws IOException {
-			int cn = 0;
-			if (n + 20 >= bufSize)
+		void print( char x ) throws IOException {
+			if (n == bufSize)
 				flush();
-			if (x < 0) {
-				b[n++] = (byte)('-');
-				x = -x;
-			}
-			while (cn == 0 || x != 0) {
-				c[cn++] = (byte)(x % 10 + '0');
-				x /= 10;
-			}
-			while (cn-- > 0)
-				b[n++] = c[cn];
+			b[n++] = (byte)x;
+		}
+
+		void print( String s ) throws IOException {
+			for (int i = 0; i < s.length(); i++)
+				print(s.charAt(i));
 		}
 
 		void flush() throws IOException {
@@ -61,7 +113,6 @@ public class Simple {
 			out.close();
 		}
 	}
-
 
 	static class Reader {
 		BufferedInputStream in;
@@ -87,6 +138,21 @@ public class Simple {
 				c = nextChar();
 			}
 			return x * sign;
+		}
+		StringBuilder _buf = new StringBuilder();
+
+		String nextWord() throws IOException {
+			int c;
+			_buf.setLength(0);
+			while ((c = nextChar()) <= 32 && c != -1)
+				;
+			if (c == -1)
+				return null;
+			while (c > 32) {
+				_buf.append((char)c);
+				c = nextChar();
+			}
+			return _buf.toString();
 		}
 
 		int bn = bufSize, k = bufSize;

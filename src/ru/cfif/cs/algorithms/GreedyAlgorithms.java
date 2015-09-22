@@ -6,35 +6,52 @@ public class GreedyAlgorithms {
 
 	public static void main(String[] args) {
 		Scanner scanner = new Scanner(System.in);
-		String str = scanner.next();
-		StringBuilder result = new StringBuilder();
-		Map<Character, Node> leaves = createsHuffmanLeaves(str);
-		if (leaves.size() == 1) {
-			result.append(leaves.size()).append(' ').append(str.length()).append('\n');
-			result.append(str.charAt(0)).append(": ").append(0).append('\n');
-			result.append(str.replace(str.charAt(0), '0'));
-			System.out.println(result);
-			return;
+		int k = scanner.nextInt();
+		int l = scanner.nextInt();
+		int minCipherSize = Integer.MAX_VALUE;
+		Map<String, String> cipher = new HashMap<>();
+		String s;
+		String c;
+		for (int i = 0; i < k; i++) {
+			s = scanner.next();
+			c = scanner.next();
+			if (minCipherSize > c.length())
+				minCipherSize = c.length();
+			cipher.put(c, s.substring(0, 1));
 		}
-		Tree tree = createHuffmanTree(leaves);
-		String code = huffmanCode(str, tree);
-		result.append(leaves.size()).append(' ').append(code.length()).append('\n');
-		for (Character character : leaves.keySet())
-			result.append(character).append(": ").append(tree.getPath(character)).append('\n');
-		result.append(code);
-		System.out.println(result);
+		System.out.println(huffmanDecode(cipher, scanner.next(), minCipherSize));
 	}
 
 	//-----------------------------------------------------
 
-	private static String huffmanCode(String str, Tree tree) {
+	public static String huffmanDecode(Map<String, String> cipher, String code, int minCipherSize) {
+		StringBuilder sb = new StringBuilder(code);
+		int t = minCipherSize;
+		StringBuilder result = new StringBuilder();
+		String s;
+		String c;
+		while (sb.length() != 0) {
+			s = sb.substring(0, t);
+			c = cipher.get(s);
+			if (c == null) {
+				t++;
+				continue;
+			}
+			result.append(c);
+			sb.delete(0, t);
+			t = minCipherSize;
+		}
+		return result.toString();
+	}
+
+	public static String huffmanCode(String str, Tree tree) {
 		StringBuilder sb = new StringBuilder();
 		for (char c : str.toCharArray())
 			sb.append(tree.getPath(c));
 		return sb.toString();
 	}
 
-	private static Map<Character, Node> createsHuffmanLeaves(String str){
+	public static Map<Character, Node> createsHuffmanLeaves(String str){
 		Map<Character, Node> result = new HashMap<>();
 		for (char c : str.toCharArray()) {
 			Node node = result.get(c);
@@ -47,7 +64,7 @@ public class GreedyAlgorithms {
 		return result;
 	}
 
-	private static Tree createHuffmanTree(Map<Character, Node> leaves) {
+	public static Tree createHuffmanTree(Map<Character, Node> leaves) {
 		PriorityQueue<Node> queue = new PriorityQueue<>((o1, o2) -> Integer.compare(o1.count, o2.count));
 		queue.addAll(leaves.values());
 		Node[] nodes = new Node[leaves.size() * 2 - 1];
@@ -63,7 +80,7 @@ public class GreedyAlgorithms {
 		return new Tree(leaves, nodes);
 	}
 
-	private static class Tree {
+	public static class Tree {
 		final Map<Character, Node> leaves;
 		final Node[] nodes;
 
@@ -88,7 +105,7 @@ public class GreedyAlgorithms {
 		}
 	}
 
-	private static class Node {
+	public static class Node {
 
 		Node[] children;
 		Node parent;
@@ -103,13 +120,19 @@ public class GreedyAlgorithms {
 			this.count = count;
 			this.children = children;
 			boolean left = false;
+			int i = 0;
 			for (Node child : children) {
 				if (child != null) {
 					child.parent = this;
 					if (child.symbol != null) {
 						child.right = left;
 						left = true;
+						i++;
+						continue;
 					}
+					if (!left && i == 1)
+						child.right = left;
+					i++;
 				}
 			}
 		}
@@ -126,7 +149,7 @@ public class GreedyAlgorithms {
 
 	//-----------------------------------------------------
 
-	private static Long[] variousTerms(double n) {
+	public static Long[] variousTerms(double n) {
 		double temp = 0.5 * (-1d + Math.sqrt(1 + 8 * n));
 		long sum = 0;
 		Set<Long> terms = new HashSet<>();
@@ -141,7 +164,7 @@ public class GreedyAlgorithms {
 
 	//-----------------------------------------------------
 
-	private static double bestPrice(double weight, List<Subject> subjects ) {
+	public static double bestPrice(double weight, List<Subject> subjects ) {
 		if (subjects.isEmpty())
 			return 0;
 		Collections.sort(subjects, ((o1, o2) -> Double.compare(o2.cost / o2.weight, o1.cost / o1.weight)));
@@ -159,7 +182,7 @@ public class GreedyAlgorithms {
 		return result;
 	}
 
-	private static class Subject {
+	public static class Subject {
 		final double cost;
 		final double weight;
 
@@ -171,7 +194,7 @@ public class GreedyAlgorithms {
 
 	//-----------------------------------------------------
 
-	private static Long[] coverSegments(SegmentPoint[] points) {
+	public static Long[] coverSegments(SegmentPoint[] points) {
 		boolean[] status = new boolean[points.length];
 		Arrays.sort(points, (o1, o2) -> {
 			int temp = Long.compare(o1.point, o2.point);
@@ -200,7 +223,7 @@ public class GreedyAlgorithms {
 		return arrayResult;
 	}
 
-	private static class SegmentPoint {
+	public static class SegmentPoint {
 
 		private final long point;
 		private final int segmentNumber;
@@ -213,7 +236,7 @@ public class GreedyAlgorithms {
 		}
 	}
 
-	private enum SegmentPointType {
+	public enum SegmentPointType {
 		LEFT(0),
 		RIGHT(1);
 		private final int id;
