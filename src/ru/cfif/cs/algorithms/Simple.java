@@ -12,7 +12,7 @@ public class Simple {
 		int n = in.nextInt();
 		int k = in.nextInt();
 		int m = in.nextInt();
-		PriorityQueue<Point> queue = new PriorityQueue<>((o1, o2) -> Integer.compare(o1.id, o2.id));
+		PriorityQueue<Col> queue = new PriorityQueue<>();
 		int[] result = new int[k + 1];
 		Point[] points = new Point[2 * m];
 		int c;
@@ -22,50 +22,84 @@ public class Simple {
 			c = in.nextInt();
 			a = in.nextInt();
 			b = in.nextInt();
-			points[2 * i] = new Point(i + 1, a, c, true);
-			points[2 * i + 1] = new Point(i + 1, b, c, false);
+			boolean center = a == b;
+			points[2 * i] = new Point(i + 1, a, c, center ? Type.CENTER : Type.LEFT);
+			points[2 * i + 1] = new Point(i + 1, b, c, center ? Type.CENTER : Type.RIGHT);
 		}
+		queue.add(new Col(0, 0));
 		Arrays.sort(points);
 		int last = 1;
+		int cur = 0;
 		for (Point point : points) {
-			if (point.left)
-				queue.add(point);
-			else
-				queue.remove(point);
 			if (point.point != last) {
-				result[queue.peek().color] += point.point - last;
-
+				result[cur]++;
+				result[queue.peek().color] += point.point - last - 1;
 			}
+			if (point.type == Type.LEFT)
+				queue.add(point.col);
+			cur = queue.peek().color;
+			if (point.type == Type.CENTER)
+				cur = point.col.color;
+			if (point.type == Type.RIGHT)
+				queue.remove(point.col);
 			last = point.point;
 		}
-
+		result[cur]++;
 		 //todo TYPE: LEFT< CENTER< RIGHT
 		for (int i = 1; i < result.length; i++)
 			out.print(result[i] + " ");
 		out.close();
 	}
 
-	static class Point implements Comparable<Point> {
-		final int point;
+	static class Col implements Comparable<Col> {
 		final int id;
 		final int color;
-		final boolean left;
 
-		Point(int id, int point, int color, boolean left) {
-			this.point = point;
+		Col(int id, int color) {
 			this.id = id;
 			this.color = color;
-			this.left = left;
+		}
+
+		public boolean equals(Object o) {
+			return o instanceof Col && id == ((Col) o).id && color == ((Col) o).color;
+		}
+
+		@Override
+		public int compareTo(Col o) {
+			return -Integer.compare(id, o.id);
+		}
+	}
+
+	static class Point implements Comparable<Point> {
+		final int point;
+		final Col col;
+		final Type type;
+
+		Point(int id, int point, int color, Type type) {
+			this.point = point;
+			this.col = new Col(id, color);
+			this.type = type;
 		}
 
 		@Override
 		public int compareTo(Point o) {
 			int res = Integer.compare(point, o.point);
 			if (res == 0) {
-				int t = Integer.compare(id, o.id);
-				return t == 0 ? -Boolean.compare(left, o.left) : t;
+				int t = Integer.compare(col.id, o.col.id);
+				return t == 0 ? Integer.compare(type.id, o.type.id) : t;
 			}
 			return res;
+		}
+	}
+
+	static enum Type {
+		LEFT(0),
+		RIGHT(1),
+		CENTER(2);
+		final int id;
+
+		Type(int id) {
+			this.id = id;
 		}
 	}
 
