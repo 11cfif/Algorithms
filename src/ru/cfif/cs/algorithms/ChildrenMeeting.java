@@ -1,33 +1,57 @@
 package ru.cfif.cs.algorithms;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
 
-public class Function {
-
-	static Map<Long, Long> map = new HashMap<>();
+public class ChildrenMeeting {
 
 	public static void main(String[] args) throws IOException {
 		Reader in = new Reader(System.in);
 		Writer out = new Writer(System.out);
-		long n = Long.valueOf(in.nextWord());
-		out.print(f(n) + "");
+		int n = in.nextInt();
+		Child[] list = new Child[n];
+		Child c;
+		for (int i = 0; i < n; i++) {
+			c = new Child(in.nextWord(), i);
+			if (i != 0) {
+				c.left = list[i - 1];
+				list[i - 1].right = c;
+			}
+			list[i] = c;
+		}
+		list[0].left = list[n - 1];
+		list[n - 1].right = list[0];
+
+		int[] pos = new int[n - 3];
+		for (int i = 0; i < n - 3; i++)
+			pos[i] = in.nextInt();
+
+		int i = 0;
+		while (i < n - 3) {
+			Child child = list[pos[i] - 1];
+			out.print(child.left.name + " ");
+			out.print(child.right.name + "\n");
+			child.left.right = child.right;
+			child.right.left = child.left;
+			i++;
+		}
 		out.close();
 	}
 
-	static long f(long n) {
-		if (n <= 2)
-			return 1;
-		Long t = map.get(n);
-		if (t != null)
-			return t;
-		if (n % 2 == 0)
-			t = ((f(n - 1) + f(n - 3)) << 32) >>> 32;
-		else
-			t = ((f(6 * n / 7) + f(2 * n / 3)) << 32) >>> 32;
-		map.put(n, t);
-		return t;
+	static class Child {
+		final String name;
+		final int id;
+		Child left;
+		Child right;
+
+		Child(String name, int id) {
+			this.name = name;
+			this.id = id;
+		}
+
+		@Override
+		public String toString() {
+			return "name = " + name + ", id = " + id;
+		}
 	}
 
 	static class Reader {
@@ -90,8 +114,7 @@ public class Function {
 		}
 	}
 
-
-	static class Writer {
+	static  class Writer {
 		BufferedOutputStream out;
 
 		final int bufSize = 1 << 16;
