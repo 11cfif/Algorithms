@@ -2,27 +2,19 @@ package ru.cfif.cs.algorithms;
 
 import java.io.*;
 
-
-public class Simple {
+public class Lights {
 	public static void main(String[] args) throws IOException {
 		Reader in = new Reader(System.in);
 		Writer out = new Writer(System.out);
 		int n = in.nextInt();
 		int k = in.nextInt();
-		int[][] a = new int[n][n];
-		int f, s;
+		int[] a = new int[n];
 		for (int i = 0; i < k; i++) {
-			f = in.nextInt();
-			s = in.nextInt();
-			a[f - 1][s - 1] = 1;
-			a[s - 1][f - 1] = 1;
-
+			a[in.nextInt() - 1]++;
+			a[in.nextInt() - 1]++;
 		}
 		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < n; j++) {
-				out.print(a[i][j] + " ");
-			}
-			out.print('\n');
+			out.print(a[i] + " ");
 		}
 		out.close();
 	}
@@ -147,4 +139,3 @@ public class Simple {
 		}
 	}
 }
-

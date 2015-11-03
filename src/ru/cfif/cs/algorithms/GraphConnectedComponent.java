@@ -1,30 +1,76 @@
 package ru.cfif.cs.algorithms;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
+public class GraphConnectedComponent {
 
-public class Simple {
+	static List<Integer>[] edge;
+	static int[] state;
+
 	public static void main(String[] args) throws IOException {
 		Reader in = new Reader(System.in);
 		Writer out = new Writer(System.out);
 		int n = in.nextInt();
 		int k = in.nextInt();
-		int[][] a = new int[n][n];
+		edge = new List[n];
+		state = new int[n];
+		for (int i = 0; i < n; i++)
+			edge[i] = new ArrayList<>();
+
+
 		int f, s;
 		for (int i = 0; i < k; i++) {
 			f = in.nextInt();
 			s = in.nextInt();
-			a[f - 1][s - 1] = 1;
-			a[s - 1][f - 1] = 1;
-
+			edge[f - 1].add(s - 1);
+			edge[s - 1].add(f - 1);
 		}
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < n; j++) {
-				out.print(a[i][j] + " ");
-			}
-			out.print('\n');
-		}
+		out.print(isTree(-1) ? "YES" : "NO");
 		out.close();
+	}
+
+	static boolean dfs(int index, int ancestry) {
+		state[index] = 1;
+		for (Integer i : edge[index]) {
+			if (i != ancestry) {
+				if (state[i] == 0) {
+					if (dfs(i, index))
+						return true;
+				} else if (state[i] == 1)
+					return true;
+			}
+		}
+		state[index] = 2;
+		return false;
+	}
+
+	static boolean isTree(int ancestry) {
+		for (int i = 0; i < state.length; i++) {
+			if (state[i] == 0) {
+				if (i == 0) {
+					if (dfs(i, ancestry))
+						return false;
+				} else {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+
+	static boolean isConnected(int ancestry) {
+		for (int i = 0; i < state.length; i++) {
+			if (state[i] == 0) {
+				if (i == 0)
+					dfs(i, ancestry);
+				else
+					return false;
+			}
+		}
+		return true;
 	}
 
 	static class Reader {
@@ -147,4 +193,3 @@ public class Simple {
 		}
 	}
 }
-
