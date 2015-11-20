@@ -3,61 +3,84 @@ package ru.cfif.cs.algorithms;
 import java.io.*;
 import java.util.*;
 
-
-public class Simple {
-
+public class GraphCondense {
+	static Node[] graph;
+	static Node[] transposedGraph;
 	static int[] state;
-	static List<Node> graph = new ArrayList<>();
-	static int nodeCount;
-	static Map<Node, Integer> map = new HashMap<>();
+	static Deque<Node> timeOrder = new ArrayDeque<>();
+	static Set<Node> components = new HashSet<>();
+	static int edgeCount;
 
 	public static void main(String[] args) throws IOException {
 		Reader in = new Reader(System.in);
 		Writer out = new Writer(System.out);
 		int n = in.nextInt();
 		int k = in.nextInt();
+		graph = new Node[n];
+		transposedGraph = new Node[n];
 		state = new int[n];
-		Node t;
-		for (int i = 0; i < n; i++) {
-			t = new Node(i);
-			graph.add(t);
+		for (int i = 0; i < n; i
+			++) {
+			graph[i] = new Node(i);
+			transposedGraph[i] = new Node(i);
 		}
 
-		for (int i = 0; i < k; i++)
-			graph.get(in.nextInt() - 1).children.add(graph.get(in.nextInt() - 1));
-
-		int result = 0;
-		int tempResult;
-		for (Node node : graph) {
-			if (state[node.id] == 0) {
-				tempResult = dfs(node);
-				if (tempResult > result)
-					result = tempResult;
-			}
+		int f, s;
+		for (int i = 0; i < k; i++) {
+			f = in.nextInt();
+			s = in.nextInt();
+			if (graph[f - 1].children.add(graph[s - 1]))
+				edgeCount++;
+			transposedGraph[s - 1].children.add(transposedGraph[f - 1]);
 		}
-		out.print(result);
+
+		calcComponentsCount();
+		out.print(edgeCount);
 		out.close();
 	}
 
-	static int dfs(Node node) {
-		state[node.id] = 1;
-		int count = 0;
-		int tempCount;
-		for (Node child : node.children) {
-			if (state[child.id] == 0)
-				tempCount = dfs(child);
-			else
-				tempCount = map.get(child);
-			if (tempCount + 1 > count)
-				count = tempCount + 1;
+	static void calcComponentsCount() {
+		Arrays.stream(graph)
+			.filter(node -> state[node.id] == 0)
+			.forEach(node -> directDfs(node.id));
+		state = new int[graph.length];
+
+		timeOrder.stream()
+			.filter(node -> state[node.id] == 0)
+			.forEach(node -> {
+				inverseDfs(node.id);
+				removeEdge();
+			});
+	}
+
+	static void directDfs(int index) {
+		state[index] = 1;
+		graph[index].children.stream()
+			.filter(child -> state[child.id] == 0)
+			.forEach(child -> directDfs(child.id));
+		timeOrder.addFirst(graph[index]);
+	}
+
+	static void inverseDfs(int index) {
+		state[index] = 1;
+		components.add(transposedGraph[index]);
+		transposedGraph[index].children.stream()
+			.filter(child -> state[child.id] == 0)
+			.forEach(child -> inverseDfs(child.id));
+	}
+
+	static void removeEdge() {
+		for (Node node : components) {
+			node.children.stream()
+				.filter(components::contains)
+				.forEach(child -> edgeCount--);
 		}
-		map.put(node, count);
-		return count;
+		components.clear();
 	}
 
 	static class Node {
 		final int id;
-		Set<Node> children = new HashSet<>();
+		final Set<Node> children = new HashSet<>();
 
 		Node(int id) {
 			this.id = id;
@@ -70,7 +93,7 @@ public class Simple {
 		final int bufSize = 1 << 16;
 		final byte b[] = new byte[bufSize];
 
-		Reader( InputStream in ) {
+		Reader(InputStream in) {
 			this.in = new BufferedInputStream(in, bufSize);
 		}
 
@@ -124,20 +147,21 @@ public class Simple {
 		}
 	}
 
-	static  class Writer {
+	static class Writer {
 		BufferedOutputStream out;
 
 		final int bufSize = 1 << 16;
 		int n;
 		byte b[] = new byte[bufSize];
 
-		Writer( OutputStream out ) {
+		Writer(OutputStream out) {
 			this.out = new BufferedOutputStream(out, bufSize);
 			this.n = 0;
 		}
 
 		byte c[] = new byte[20];
-		void print( int x ) throws IOException {
+
+		void print(int x) throws IOException {
 			int cn = 0;
 			if (n + 20 >= bufSize)
 				flush();
@@ -153,23 +177,25 @@ public class Simple {
 				b[n++] = c[cn];
 		}
 
-		void print( char x ) throws IOException {
+		void print(char x) throws IOException {
 			if (n == bufSize)
 				flush();
 			b[n++] = (byte)x;
 		}
 
-		void print( String s ) throws IOException {
+		void print(String s) throws IOException {
 			for (int i = 0; i < s.length(); i++)
 				print(s.charAt(i));
 		}
-		void println( String s ) throws IOException {
+
+		void println(String s) throws IOException {
 			print(s);
 
 			println();
 		}
 
 		static final String newLine = System.getProperty("line.separator");
+
 		void println() throws IOException {
 			print(newLine);
 		}
@@ -178,10 +204,10 @@ public class Simple {
 			out.write(b, 0, n);
 			n = 0;
 		}
+
 		void close() throws IOException {
 			flush();
 			out.close();
 		}
 	}
 }
-
