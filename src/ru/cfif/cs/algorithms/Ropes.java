@@ -209,7 +209,7 @@ public class Ropes {
 			if (result != result1) {
 				System.out.println("n=" + n);
 				System.out.println("k=" + k);
-				System.out.println("a=" + Arrays.toString(ropes));
+				System.out.println("v=" + Arrays.toString(ropes));
 			}
 			System.out.println("j = " + j);
 		}

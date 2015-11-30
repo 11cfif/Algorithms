@@ -1,92 +1,92 @@
 package ru.cfif.cs.algorithms;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 
-public class GraphConnectedComponent {
+public class Salesman {
 
-	static List<Integer>[] edge;
-	static int[] state;
-	static int[] components;
+	static int n;
+	static int[][] w;
+	static int[][] d;
 
 	public static void main(String[] args) throws IOException {
 		Reader in = new Reader(System.in);
 		Writer out = new Writer(System.out);
-		int n = in.nextInt();
-		int k = in.nextInt();
-		edge = new List[n];
-		state = new int[n];
-		components = new int[n];
-		for (int i = 0; i < n; i++)
-			edge[i] = new ArrayList<>();
-
-
-		int f, s;
-		for (int i = 0; i < k; i++) {
-			f = in.nextInt();
-			s = in.nextInt();
-			edge[f - 1].add(s - 1);
-			edge[s - 1].add(f - 1);
+		n = in.nextInt();
+		w = new int[n + 1][n + 1];
+		for (int i = 1; i < n + 1; i++) {
+			for (int j = 1; j < n + 1; j++)
+				w[i][j] = in.nextInt();
 		}
-		out.print(connectedComponentCount() + "\n");
-		for (int i = 0; i < n; i++)
-			out.print(components[i] + " ");
+		if (n == 1) {
+			out.println(0+"");
+			out.print(1);
+			out.close();
+			return;
+		}
+		d = new int[1 << n][n + 1];
+
+		for (int i = 1; i < d.length; i++) {
+			for (int j = 0; j < n + 1; j++)
+				d[i][j] = Integer.MAX_VALUE;
+		}
+		d[0] = new int[n + 1];
+
+		d[1][0] = 0;
+		out.println(calcDistance((1 << n) - 1, 0) + "");
+		out.println(get());
 		out.close();
 	}
 
-	static boolean dfs(int index, int ancestry, int componentNumber) {
-		state[index] = 1;
-		for (Integer i : edge[index]) {
-			if (i != ancestry) {
-				if (state[i] == 0)
-					dfs(i, index, componentNumber);
-			}
+	static int calcDistance(int set, int id) {
+		int[] res = d[set];
+		if (res[id] != Integer.MAX_VALUE) {
+			return res[id];
 		}
-		state[index] = 2;
-		components[index] = componentNumber;
-		return false;
+		int bit = 1;
+		int i = 1;
+		while ( bit <= set) {
+			if ((set & bit) != 0) {
+				res[id] = Math.min(res[id], calcDistance(set - bit, i) + w[i][id]);
+			}
+			bit = 1 << i++;
+		}
+		return res[id];
 	}
 
-	static boolean isTree(int ancestry) {
-		for (int i = 0; i < state.length; i++) {
-			if (state[i] == 0) {
-				if (i == 0) {
-					if (dfs(i, ancestry, -1))
-						return false;
-				} else {
-					return false;
+
+	static String get() {
+		int i = n - 1;
+		int[] sb = new int[n];
+		int bit;
+		int mask = (1 << n) - 1;
+		for (int j = 0; j < n; j++) {
+			bit = 1 << (j);
+			for (int k = 1; k <= n; k++) {
+				if (d[mask][0] == d[mask - bit][k]) {
+					sb[i] = j + 1;
+					mask = mask - bit;
+					break;
+				}
+			}
+			if (mask != (1 << n) - 1)
+				break;
+		}
+		while (mask != 0) {
+			for (int j = 0; j < n; j++) {
+				bit = 1 << (j);
+				if ((mask & bit) != 0 && d[mask][sb[i]] == d[mask - bit][j + 1] + w[j + 1][sb[i]]) {
+					i--;
+					sb[i] = j + 1;
+					mask = mask - bit;
 				}
 			}
 		}
-		return true;
-	}
-
-	static int connectedComponentCount() {
-		int result = 0;
-		int componentNumber = 1;
-		for (int i = 0; i < state.length; i++) {
-			if (state[i] == 0) {
-				dfs(i, -1, componentNumber);
-				result++;
-				componentNumber++;
-			}
+		StringBuilder res = new StringBuilder();
+		for (int j = 0; j < n; j++) {
+			res.append(sb[j]).append(" ");
 		}
-		return result;
+		return res.toString();
 	}
-
-
-//	static boolean isConnected(int ancestry) {
-//		for (int i = 0; i < state.length; i++) {
-//			if (state[i] == 0) {
-//				if (i == 0)
-//					dfs(i, ancestry);
-//				else
-//					return false;
-//			}
-//		}
-//		return true;
-//	}
 
 	static class Reader {
 		BufferedInputStream in;
@@ -189,7 +189,6 @@ public class GraphConnectedComponent {
 		}
 		void println( String s ) throws IOException {
 			print(s);
-
 			println();
 		}
 

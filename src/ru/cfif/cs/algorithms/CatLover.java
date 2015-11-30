@@ -1,92 +1,38 @@
 package ru.cfif.cs.algorithms;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
 
-public class GraphConnectedComponent {
-
-	static List<Integer>[] edge;
-	static int[] state;
-	static int[] components;
+public class CatLover {
 
 	public static void main(String[] args) throws IOException {
 		Reader in = new Reader(System.in);
 		Writer out = new Writer(System.out);
 		int n = in.nextInt();
-		int k = in.nextInt();
-		edge = new List[n];
-		state = new int[n];
-		components = new int[n];
-		for (int i = 0; i < n; i++)
-			edge[i] = new ArrayList<>();
-
-
-		int f, s;
-		for (int i = 0; i < k; i++) {
+		int m = in.nextInt();
+		int[][] a = new int[n][n];
+		int f;
+		int s;
+		for (int i = 0; i < m; i++) {
 			f = in.nextInt();
 			s = in.nextInt();
-			edge[f - 1].add(s - 1);
-			edge[s - 1].add(f - 1);
+			a[f - 1][s - 1] = 1;
+			a[s - 1][f - 1] = 1;
 		}
-		out.print(connectedComponentCount() + "\n");
-		for (int i = 0; i < n; i++)
-			out.print(components[i] + " ");
-		out.close();
-	}
 
-	static boolean dfs(int index, int ancestry, int componentNumber) {
-		state[index] = 1;
-		for (Integer i : edge[index]) {
-			if (i != ancestry) {
-				if (state[i] == 0)
-					dfs(i, index, componentNumber);
-			}
-		}
-		state[index] = 2;
-		components[index] = componentNumber;
-		return false;
-	}
-
-	static boolean isTree(int ancestry) {
-		for (int i = 0; i < state.length; i++) {
-			if (state[i] == 0) {
-				if (i == 0) {
-					if (dfs(i, ancestry, -1))
-						return false;
-				} else {
-					return false;
+		int result = 0;
+		for (int i = 0; i < n; i++) {
+			for (int j = i + 1; j < n; j++) {
+				if (a[i][j] == 1) {
+					for (int k = j + 1; k < n; k++) {
+						if (a[j][k] == 1 && a[i][k] == 1)
+							result++;
+					}
 				}
 			}
 		}
-		return true;
+		out.print(result);
+		out.close();
 	}
-
-	static int connectedComponentCount() {
-		int result = 0;
-		int componentNumber = 1;
-		for (int i = 0; i < state.length; i++) {
-			if (state[i] == 0) {
-				dfs(i, -1, componentNumber);
-				result++;
-				componentNumber++;
-			}
-		}
-		return result;
-	}
-
-
-//	static boolean isConnected(int ancestry) {
-//		for (int i = 0; i < state.length; i++) {
-//			if (state[i] == 0) {
-//				if (i == 0)
-//					dfs(i, ancestry);
-//				else
-//					return false;
-//			}
-//		}
-//		return true;
-//	}
 
 	static class Reader {
 		BufferedInputStream in;
@@ -189,7 +135,6 @@ public class GraphConnectedComponent {
 		}
 		void println( String s ) throws IOException {
 			print(s);
-
 			println();
 		}
 
