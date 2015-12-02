@@ -4,12 +4,11 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Simple {
+public class GraphTopSort {
 
 	static List<Integer>[] edge;
+	static List<Integer> topological = new ArrayList<>();
 	static int[] state;
-	static List<Integer> cycle = new ArrayList<>();
-	static int start = -1;
 
 	public static void main(String[] args) throws IOException {
 		Reader in = new Reader(System.in);
@@ -28,45 +27,36 @@ public class Simple {
 			s = in.nextInt();
 			edge[f - 1].add(s - 1);
 		}
-		if (isCycle()) {
-			out.print("NO");
+		if (!topologicalSort()) {
+			out.print(-1);
 			out.close();
 			return;
 		}
-		out.print("YES\n");
-		boolean pr = false;
-		for (Integer i : cycle) {
-			if (i == start)
-				pr = true;
-			if (pr)
-				out.print(i + 1 + " ");
-		}
+		for (int i = n - 1; i >= 0; i--)
+			out.print(topological.get(i) + 1 + " ");
 		out.close();
 	}
 
 	static boolean dfs(int index) {
 		state[index] = 1;
-		cycle.add(index);
 		for (Integer i : edge[index]) {
-			if (state[i] == 0) {
-				if (!dfs(i))
+				if (state[i] == 0) {
+					if (!dfs(i))
+						return false;
+				} else if (state[i] == 1)
 					return false;
-			} else if (state[i] == 1) {
-				if (start == -1)
-					start = i;
-				return false;
-			}
 		}
+		topological.add(index);
 		state[index] = 2;
-		cycle.remove(new Integer(index));
 		return true;
 	}
 
-	static boolean isCycle() {
-		for (int i = 0; i < edge.length; i++) {
-			if (dfs(i))
-				cycle.clear();
-			else
+	static boolean topologicalSort() {
+		for (int i = 0; i < edge.length; ++i) {
+			if (state[i] == 0) {
+				if (!dfs(i))
+					return false;
+			} else if (state[i] == 1)
 				return false;
 		}
 		return true;
@@ -192,4 +182,3 @@ public class Simple {
 		}
 	}
 }
-

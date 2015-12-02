@@ -1,90 +1,74 @@
 package ru.cfif.cs.algorithms;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GraphCondense {
-	static Node[] graph;
-	static Node[] transposedGraph;
+
+	static List<Integer>[] edge;
 	static int[] state;
-	static Deque<Node> timeOrder = new ArrayDeque<>();
-	static Set<Node> components = new HashSet<>();
-	static int edgeCount;
+	static List<Integer> order = new ArrayList<>();
+	static List<List<Integer>> component = new ArrayList<>();
 
 	public static void main(String[] args) throws IOException {
 		Reader in = new Reader(System.in);
 		Writer out = new Writer(System.out);
 		int n = in.nextInt();
 		int k = in.nextInt();
-		graph = new Node[n];
-		transposedGraph = new Node[n];
+		edge = new List[n];
+		for (int i = 0; i < n; i++)
+			edge[i] = new ArrayList<>();
 		state = new int[n];
-		for (int i = 0; i < n; i
-			++) {
-			graph[i] = new Node(i);
-			transposedGraph[i] = new Node(i);
-		}
 
 		int f, s;
 		for (int i = 0; i < k; i++) {
 			f = in.nextInt();
 			s = in.nextInt();
-			if (graph[f - 1].children.add(graph[s - 1]))
-				edgeCount++;
-			transposedGraph[s - 1].children.add(transposedGraph[f - 1]);
+			edge[f].add(s - 1);
 		}
-
-		calcComponentsCount();
-		out.print(edgeCount);
+		if (!topologicalSort()) {
+			out.print(-1);
+			out.close();
+			return;
+		}
+		for (int i = n - 1; i >= 0; i--)
+//			out.print(topological.get(i) + 1 + " ");
 		out.close();
 	}
 
-	static void calcComponentsCount() {
-		Arrays.stream(graph)
-			.filter(node -> state[node.id] == 0)
-			.forEach(node -> directDfs(node.id));
-		state = new int[graph.length];
-
-		timeOrder.stream()
-			.filter(node -> state[node.id] == 0)
-			.forEach(node -> {
-				inverseDfs(node.id);
-				removeEdge();
-			});
+	static void dfs1 (int v) {
+		state[v] = 1;
+		for (int i = 0; i < edge[v].size(); i++)
+			if (state[edge[v].get(i)] == 0)
+				dfs1 (edge[v].get(i));
+		order.add(v);
 	}
 
-	static void directDfs(int index) {
+
+	static boolean dfs(int index) {
 		state[index] = 1;
-		graph[index].children.stream()
-			.filter(child -> state[child.id] == 0)
-			.forEach(child -> directDfs(child.id));
-		timeOrder.addFirst(graph[index]);
-	}
-
-	static void inverseDfs(int index) {
-		state[index] = 1;
-		components.add(transposedGraph[index]);
-		transposedGraph[index].children.stream()
-			.filter(child -> state[child.id] == 0)
-			.forEach(child -> inverseDfs(child.id));
-	}
-
-	static void removeEdge() {
-		for (Node node : components) {
-			node.children.stream()
-				.filter(components::contains)
-				.forEach(child -> edgeCount--);
+		for (Integer i : edge[index]) {
+			if (state[i] == 0) {
+				if (!dfs(i))
+					return false;
+			} else if (state[i] == 1)
+				return false;
 		}
-		components.clear();
+//		topological.add(index);
+		state[index] = 2;
+		return true;
 	}
 
-	static class Node {
-		final int id;
-		final Set<Node> children = new HashSet<>();
-
-		Node(int id) {
-			this.id = id;
+	static boolean topologicalSort() {
+		for (int i = 0; i < edge.length; ++i) {
+			if (state[i] == 0) {
+				if (!dfs(i))
+					return false;
+			} else if (state[i] == 1)
+				return false;
 		}
+		return true;
 	}
 
 	static class Reader {
@@ -93,7 +77,7 @@ public class GraphCondense {
 		final int bufSize = 1 << 16;
 		final byte b[] = new byte[bufSize];
 
-		Reader(InputStream in) {
+		Reader( InputStream in ) {
 			this.in = new BufferedInputStream(in, bufSize);
 		}
 
@@ -147,21 +131,20 @@ public class GraphCondense {
 		}
 	}
 
-	static class Writer {
+	static  class Writer {
 		BufferedOutputStream out;
 
 		final int bufSize = 1 << 16;
 		int n;
 		byte b[] = new byte[bufSize];
 
-		Writer(OutputStream out) {
+		Writer( OutputStream out ) {
 			this.out = new BufferedOutputStream(out, bufSize);
 			this.n = 0;
 		}
 
 		byte c[] = new byte[20];
-
-		void print(int x) throws IOException {
+		void print( int x ) throws IOException {
 			int cn = 0;
 			if (n + 20 >= bufSize)
 				flush();
@@ -177,25 +160,23 @@ public class GraphCondense {
 				b[n++] = c[cn];
 		}
 
-		void print(char x) throws IOException {
+		void print( char x ) throws IOException {
 			if (n == bufSize)
 				flush();
 			b[n++] = (byte)x;
 		}
 
-		void print(String s) throws IOException {
+		void print( String s ) throws IOException {
 			for (int i = 0; i < s.length(); i++)
 				print(s.charAt(i));
 		}
-
-		void println(String s) throws IOException {
+		void println( String s ) throws IOException {
 			print(s);
 
 			println();
 		}
 
 		static final String newLine = System.getProperty("line.separator");
-
 		void println() throws IOException {
 			print(newLine);
 		}
@@ -204,7 +185,6 @@ public class GraphCondense {
 			out.write(b, 0, n);
 			n = 0;
 		}
-
 		void close() throws IOException {
 			flush();
 			out.close();

@@ -4,72 +4,86 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Simple {
-
-	static List<Integer>[] edge;
-	static int[] state;
-	static List<Integer> cycle = new ArrayList<>();
-	static int start = -1;
+public class SumDistGraph {
+	static Edge[] edges;
+	static boolean[] state;
+	static int n, m;
+	static final int INF = 1000000;
 
 	public static void main(String[] args) throws IOException {
 		Reader in = new Reader(System.in);
 		Writer out = new Writer(System.out);
-		int n = in.nextInt();
-		int k = in.nextInt();
-		edge = new List[n];
-		state = new int[n];
-		for (int i = 0; i < n; i++)
-			edge[i] = new ArrayList<>();
-
-
-		int f, s;
-		for (int i = 0; i < k; i++) {
-			f = in.nextInt();
-			s = in.nextInt();
-			edge[f - 1].add(s - 1);
+		n = in.nextInt();
+		m = in.nextInt();
+		state = new boolean[n];
+		for (int i = 0; i < n; i++) {
+			if (in.nextInt() == 2)
+				state[i] = true;
 		}
-		if (isCycle()) {
-			out.print("NO");
-			out.close();
-			return;
+		edges = new Edge[2 * m];
+		for (int i = 0; i < m; i++) {
+			int v = in.nextInt() - 1;
+			int w = in.nextInt() - 1;
+			edges[2 * i] = new Edge(v, w, state[v] != state[w] ? 1 : 0);
+			edges[2 * i + 1] = new Edge(w, v, state[v] != state[w] ? 1 : 0);
 		}
-		out.print("YES\n");
-		boolean pr = false;
-		for (Integer i : cycle) {
-			if (i == start)
-				pr = true;
-			if (pr)
-				out.print(i + 1 + " ");
+
+		int[] p = solve(0);
+		if (p[n - 1] == -1)
+			out.print("impossible");
+		else {
+			List<Integer> list = new ArrayList<>();
+			out.print(p[n] + " ");
+			list.add(0, n);
+			int cur = n - 1;
+			while(p[cur] != -1) {
+				cur = p[cur];
+				list.add(0, cur + 1);
+			}
+			out.print(list.size() +"\n");
+			for (Integer i : list) {
+				out.print(i + " ");
+			}
 		}
 		out.close();
 	}
 
-	static boolean dfs(int index) {
-		state[index] = 1;
-		cycle.add(index);
-		for (Integer i : edge[index]) {
-			if (state[i] == 0) {
-				if (!dfs(i))
-					return false;
-			} else if (state[i] == 1) {
-				if (start == -1)
-					start = i;
-				return false;
-			}
+	static int[] solve(int s) throws IOException {
+		int[] d = new int[n];
+		for (int i = 0; i < n; i++) {
+			d[i] = INF;
 		}
-		state[index] = 2;
-		cycle.remove(new Integer(index));
-		return true;
+		d[s] = 0;
+		int p[] = new int[n + 1];
+		p[s] = -1;
+		p[n - 1] = -1;
+		for (;;) {
+			boolean any = false;
+			for (int j = 0; j < 2*m; j++)
+				if (d[edges[j].a] < INF)
+					if (d[edges[j].b] > d[edges[j].a] + edges[j].cost) {
+						d[edges[j].b] = d[edges[j].a] + edges[j].cost;
+						p[edges[j].b] = edges[j].a;
+						any = true;
+					}
+			if (!any)  break;
+		}
+		p[n] = d[n - 1];
+//		System.out.println(Arrays.toString(d));
+//		System.out.println(Arrays.toString(p));
+		return p;
 	}
 
-	static boolean isCycle() {
-		for (int i = 0; i < edge.length; i++) {
-			if (dfs(i))
-				cycle.clear();
-			else
-				return false;
+	static class Edge {
+		final int a;
+		final int b;
+		final int cost;
+
+		Edge(int a, int b, int cost) {
+			this.a = a;
+			this.b = b;
+			this.cost = cost;
 		}
-		return true;
 	}
 
 	static class Reader {
@@ -192,4 +206,3 @@ public class Simple {
 		}
 	}
 }
-
